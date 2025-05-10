@@ -1,0 +1,22 @@
+        location / {
+            access_by_lua_block {
+                local ws_proxy = require "resty.websocket.proxy"
+                local proxy, err
+
+                proxy = ngx.ctx.proxy
+                if proxy == nil then
+                    proxy, err = ws_proxy.new({
+                        upstream = "ws://127.0.0.1:8080",
+                        debug = true,
+                    })
+                    if not proxy then
+                        ngx.log(ngx.ERR, "failed to create proxy: ", err)
+                        return ngx.exit(444)
+                    end
+
+                    ngx.ctx.proxy = proxy
+                end
+
+                proxy:execute()
+            }
+        }
